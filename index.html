@@ -460,6 +460,27 @@ body.show-action-labels .ab{overflow:visible}body.show-action-labels .ab::after{
 body.high-contrast #pt,body.high-contrast #farm-hud,body.high-contrast #combat-target{border-width:2px;border-color:#fff}body.high-contrast .ab{border-color:#fff!important;background-color:#081226!important}body.high-contrast #qs{border:2px solid #fff;color:#fff}body.high-contrast .combat-target-state.danger{color:#fff;background:#b91c1c;padding:1px 3px;border-radius:3px}body.high-contrast .f{text-shadow:-2px -2px #000,2px -2px #000,-2px 2px #000,2px 2px #000!important}body.control-test .ab{outline:3px solid #86efac;outline-offset:3px;filter:brightness(1.35);box-shadow:0 0 18px #22c55e!important}
 #farm-hud{flex-wrap:nowrap}
 #farm-hud.h{display:none!important}
+/* ==== HEDEF KARTI DİLİ (g-* sınıfları) ==== */
+.g-card{min-width:0;overflow-wrap:anywhere}
+.g-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.g-goal{min-width:0}
+.g-heading{display:block;font-size:8px;letter-spacing:1.2px;color:#9fc6ad;font-weight:900;text-transform:uppercase}
+.g-goal-name{display:block;margin:3px 0 5px;color:#f0d7a3;font:700 15px Georgia,serif;line-height:1.25}
+.g-counter{flex:0 0 auto;min-width:34px;padding:5px 7px;border:1px solid #d6b96f;border-radius:9px;background:#0a1928;color:#fde68a;font-weight:900;font-size:12px;text-align:center;line-height:1.1}
+.g-counter small{display:block;font-size:7px;letter-spacing:1px;color:#c9b478;margin-top:1px}
+.g-headside{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.g-block{background:#0b1d2f;border:1px solid #33485a;border-radius:9px;padding:8px;margin-top:7px;overflow-wrap:anywhere}
+.g-block h4{margin:0 0 3px;font-size:8px;letter-spacing:1px;color:#facc15;font-weight:900;text-transform:uppercase}
+.g-block p{margin:0;font-size:9.5px;line-height:1.5;color:#c7d5da}
+.g-why{border-left:3px solid #d6b96f}
+.g-resources{display:grid;gap:5px;margin-top:7px}
+.g-res{display:flex;gap:7px;align-items:flex-start;padding:6px;border:1px solid #405565;border-radius:7px;background:#0a1928;min-width:0;overflow-wrap:anywhere}
+.g-res b{color:#fde68a;white-space:nowrap;font-size:9px}
+.g-res span{color:#b9ccd2;font-size:9px;line-height:1.4}
+#story-kicker{flex:0 0 auto;width:max-content;max-width:100%;padding:3px 9px;border:1px solid #d6b96f;border-radius:999px;background:#172033;color:#fde68a;letter-spacing:1.3px}
+#story-line{display:block;min-height:96px;margin-top:9px;padding:11px 12px;border:1px solid #3d5a6c;border-radius:10px;background:#0c1a29;line-height:1.6!important;overflow-wrap:anywhere}
+.quest-card p,.guide-copy,.g-block,.g-res{overflow-wrap:anywhere}
+@media(max-width:420px){.g-card-head{flex-direction:column;align-items:stretch}.g-counter{align-self:flex-start}.g-goal-name{font-size:13px}.quest-actions{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -3161,7 +3182,8 @@ const QUEST_FLOW=window.QUEST_FLOW={
   html(){
     const q=QS[P.q];if(!q)return `<div id="story-direction" class="journey-box"><b>🧭 Bir hayat kur, kurduğun hayatı koru.</b><p>${this.status()}</p><p class="inventory-help">Çiftlik, keşif veya ustalık hedefini kendi hızında seç.</p></div>`;
     const progress=cl(Math.floor(Number(P.qn)||0),0,q.n),pct=Math.round(progress/q.n*100),label=this.optional()?'İSTEĞE BAĞLI HEDEF':'ANA GÖREV ROTASI',repeat=q.k==='any'&&P.bounties>0,rewardG=repeat?80:q.g,rewardM=repeat?2:q.m,rewardXp=repeat?150:q.xp,prep=this.preparation(q),ready=prep.ready===prep.total;
-    return `<div id="story-direction" class="quest-card"><div class="quest-card-head"><div><span class="quest-chapter">${label} · ${q.ch}</span><h3>${q.icon} ${q.t}</h3><span class="quest-giver">📜 Görevi veren: ${q.giver}</span></div><span class="quest-ready ${ready?'ok':''}">${ready?'HAZIR':`HAZIRLIK ${prep.ready}/${prep.total}`}</span></div><p style="color:#d7c7a2;font-size:9.5px">${window.STORY?STORY.soFar():''}</p><p>${q.story}</p><div class="quest-progress"><i style="width:${pct}%"></i></div><p style="text-align:right;font-size:8.5px">İlerleme ${progress}/${q.n}</p><p><b>Neden?</b> ${q.why}</p><div class="quest-prep">${prep.checks.map(c=>`<span class="${c.ok?'ok':''}">${c.ok?'✓':'○'} ${c.label}</span>`).join('')}</div><div class="quest-rewards"><span>+${rewardG}🪙</span><span>+${rewardM}💎</span><span>+${rewardXp} XP</span></div><div class="quest-tip"><b>Ne yapmalıyım?</b> ${q.tip}</div><div class="quest-actions"><button type="button" class="primary" data-quest-map="1">🗺️ Hedefi Haritada Göster</button><button type="button" data-quest-bag="1">🧰 Hazırlık Planını Aç</button></div></div>${this.timelineHTML(q)}<p class="inventory-help">Hepsini aynı gün yapmak zorunda değilsin. Hazırlan → hedefi tamamla → ödülle dön → sonraki bölüme geç.</p>`;
+    const resIcon={level:'⬆️',healing:'🍖',gear:q.k==='fish'?'🎣':'⚔️'},resLoc={level:'Kolay bölgelerde avlanarak ya da görev ödülleriyle',healing:'Ev ocağında yemek pişir — buğday: Günlük Bakım · yoksa tüccardan can iksiri',gear:q.k==='forge'?'Eşyayı Demirci Boran’a götür · demircide +1 geliştir':q.k==='fish'?'Araçlar bölümünden oltayı seç · Sığ Göl İskelesi kenarında F’ye bas':'Çantadan silah veya zırh kuşan'};const missingHTML=prep.checks.filter(c=>!c.ok).map(c=>`<div class="g-res"><b>${resIcon[c.id]||'🧰'} ${c.label}</b><span>${resLoc[c.id]}</span></div>`).join('');
+    return `<div id="story-direction" class="quest-card g-card"><div class="quest-card-head g-card-head"><div class="g-goal"><span class="quest-chapter g-heading">${label} · ${q.ch}</span><h3 class="g-goal-name">${q.icon} ${q.t}</h3><span class="quest-giver">📜 Görevi veren: ${q.giver}</span></div><div class="g-headside"><span class="g-counter">${progress}<small>/ ${q.n}</small></span><span class="quest-ready ${ready?'ok':''}">${ready?'HAZIR':`HAZIRLIK ${prep.ready}/${prep.total}`}</span></div></div><p style="color:#d7c7a2;font-size:9.5px">${window.STORY?STORY.soFar():''}</p><p>${q.story}</p><div class="quest-progress"><i style="width:${pct}%"></i></div><div class="g-block g-why"><h4>Neden?</h4><p>${q.why}</p></div><div class="quest-prep">${prep.checks.map(c=>`<span class="${c.ok?'ok':''}">${c.ok?'✓':'○'} ${c.label}</span>`).join('')}</div>${missingHTML?`<div class="g-resources">${missingHTML}</div>`:''}<div class="quest-rewards"><span>+${rewardG}🪙</span><span>+${rewardM}💎</span><span>+${rewardXp} XP</span></div><div class="g-block"><h4>Ne yapmalıyım?</h4><p>${q.tip}</p></div><div class="quest-actions"><button type="button" class="primary" data-quest-map="1">🗺️ Hedefi Haritada Göster</button><button type="button" data-quest-bag="1">🧰 Hazırlık Planını Aç</button></div></div>${this.timelineHTML(q)}<p class="inventory-help">Hepsini aynı gün yapmak zorunda değilsin. Hazırlan → hedefi tamamla → ödülle dön → sonraki bölüme geç.</p>`;
   }
 };
 function closeQuestPrep(){$('quest-prep-modal').classList.add('h');GAME_CORE.resetInput()}
@@ -13688,7 +13710,7 @@ const ONBOARD=window.ONBOARD={
     const s=P.adventure.intro;if(!s)return '';
     if(!this.active())return s.completed?'<div class="journey-box"><b>✓ İlk düzenini kurdun</b><p>Çiftliğin maceranı besliyor; maceran da yuvanı geliştiriyor.</p></div>':'';
     const t=this.current();
-    return `<div id="onboarding-card" class="journey-box"><b>${this.label()}</b><p>${t.voice?`“${t.voice}” `:''}<b>Ne yapmalıyım?</b> ${t.hint}</p><ol class="intro-steps">${this.steps.map(step=>`<li class="${(s.events[step.id]||0)>=(step.need||1)?'done':''}">${(s.events[step.id]||0)>=(step.need||1)?'✓':'○'} ${step.label}</li>`).join('')}</ol><p class="inventory-help">${window.STORY?STORY.soFar():''} Sarı hedef, sıradaki adımı ve nedenini açıklar.</p>${!s.recoveryUsed&&!s.events.cook?'<button data-onboard="recover">Buğdayı kaybettim · Melis’ten yardım</button>':''}${t.id==='chest'&&!s.chestAid?'<button data-onboard="chest">Odun veya taş yetmedi · Muhtarın desteği</button>':''}<button data-onboard="skip">Rehberi atla</button></div>`;
+    return `<div id="onboarding-card" class="journey-box g-card"><div class="g-card-head"><div class="g-goal"><span class="g-heading">İLK YOLCULUK</span><b class="g-goal-name">🧭 ${t.label}</b></div><span class="g-counter">${this.steps.indexOf(t)+1}<small>/ ${this.steps.length}</small></span></div>${t.voice?`<p class="guide-copy">“${t.voice}”</p>`:''}<div class="g-block"><h4>Ne yapmalıyım?</h4><p>${t.hint}</p></div><ol class="intro-steps">${this.steps.map(step=>`<li class="${(s.events[step.id]||0)>=(step.need||1)?'done':''}">${(s.events[step.id]||0)>=(step.need||1)?'✓':'○'} ${step.label}</li>`).join('')}</ol><p class="inventory-help">${window.STORY?STORY.soFar():''} Sarı hedef, sıradaki adımı ve nedenini açıklar.</p>${!s.recoveryUsed&&!s.events.cook?'<button data-onboard="recover">Buğdayı kaybettim · Melis’ten yardım</button>':''}${t.id==='chest'&&!s.chestAid?'<button data-onboard="chest">Odun veya taş yetmedi · Muhtarın desteği</button>':''}<button data-onboard="skip">Rehberi atla</button></div>`;
   }
 };
 function guideChapterCard(){
@@ -13713,7 +13735,7 @@ function guideUI(){
     const s=P.adventure.intro,done=ONBOARD.steps.filter(t=>(s.events[t.id]||0)>=(t.need||1)).length;
     const index=ONBOARD.steps.indexOf(step)+1,pct=Math.round(done/ONBOARD.steps.length*100);
     const actionLabel=step.id==='forest'?'🌲 Ormana Git':step.id==='chest'?'📦 Sandığı Kurmaya Başla':step.id==='cook'&&curMap==='inside'?'🍳 Ocağı Aç':step.target==='farm'&&curMap==='home'?'🌿 Kolay Bahçeyi Aç':step.target==='build'?'🔨 Yapılar Bölümünü Aç':'🗺️ Haritada Göster';
-    box.innerHTML=`<span class="guide-kicker">İLK YOLCULUK · ADIM ${index}/${ONBOARD.steps.length}</span><h2 class="guide-title">${step.label}</h2><p class="guide-copy">${STORY.soFar()}</p><p class="guide-copy"><b>Ne yapmalıyım?</b> ${step.hint}</p>${step.voice?`<div class="guide-why"><b>${step.speaker||'Muhtar Hamdi'}</b><br>“${step.voice}”</div>`:''}<div class="guide-progress"><i style="width:${pct}%"></i></div><p style="font-size:9px;color:#8fa6af;text-align:right">${done}/${ONBOARD.steps.length} temel adım tamamlandı</p><div class="guide-meta"><div><b>📍 Gideceğin Yer</b>${step.place||'Hedef bölge'}</div><div><b>🎯 Amaç</b>${index===ONBOARD.steps.length?'Temel döngüyü tamamla':'Bir sonraki sistemi öğren'}</div></div><div class="guide-why"><b>Neden yapıyorum?</b><br>${step.why}</div><div class="guide-actions"><button id="guide-primary" class="primary" data-target="${step.target}">${actionLabel}</button><button id="guide-journal">📔 Yolcu Defteri</button></div><button id="guide-skip" class="guide-skip">Rehberli başlangıcı atla</button>${step.id==='chest'&&!s.chestAid?'<button id="guide-aid" type="button" style="width:100%;margin-top:8px">🪵 Odun veya taş yetmedi · tek seferlik destek</button>':''}`;
+    box.innerHTML=`<div class="g-card-head"><span class="guide-kicker g-heading">İLK YOLCULUK</span><span class="g-counter">${index}<small>/ ${ONBOARD.steps.length}</small></span></div><h2 class="guide-title">${step.label}</h2><p class="guide-copy">${STORY.soFar()}</p><div class="g-block"><h4>Ne yapmalıyım?</h4><p>${step.hint}</p></div>${step.voice?`<div class="guide-why g-block"><h4>${step.speaker||'Muhtar Hamdi'}</h4><p>“${step.voice}”</p></div>`:''}<div class="guide-progress"><i style="width:${pct}%"></i></div><p style="font-size:9px;color:#8fa6af;text-align:right">${done}/${ONBOARD.steps.length} temel adım tamamlandı</p><div class="guide-meta"><div><b>📍 Gideceğin Yer</b>${step.place||'Hedef bölge'}</div><div><b>🎯 Amaç</b>${index===ONBOARD.steps.length?'Temel döngüyü tamamla':'Bir sonraki sistemi öğren'}</div></div><div class="guide-why g-block g-why"><h4>Neden yapıyorum?</h4><p>${step.why}</p></div><div class="guide-actions"><button id="guide-primary" class="primary" data-target="${step.target}">${actionLabel}</button><button id="guide-journal">📔 Yolcu Defteri</button></div><button id="guide-skip" class="guide-skip">Rehberli başlangıcı atla</button>${step.id==='chest'&&!s.chestAid?'<button id="guide-aid" type="button" style="width:100%;margin-top:8px">🪵 Odun veya taş yetmedi · tek seferlik destek</button>':''}`;
   }else{
     const q=QS[P.q],free=!q;
     if(STORY.needsRest()){
@@ -14028,11 +14050,11 @@ const STORY=window.STORY={
         : 'Sıradaki hedef: istediğin işi seç · hikâye rotan tamamlandı';
     const beats=step?[
       {who:step.speaker||'Muhtar Hamdi',icon:'🏛️',kicker:'İLK DÜZEN',line:step.voice||step.hint},
-      {who:'Muhtar Hamdi',icon:'🏛️',kicker:'TEMPO',line:`${goalLine}. Acele etme. Sarı hedef sıradaki adımı gösterir. Kasaba payın ilk gün ücretsiz; düzenini kurunca bu binadan alırsın.`,cta:'Anladım'}
+      {who:'Muhtar Hamdi',icon:'🏛️',kicker:`ADIM ${stepIndex}/${ONBOARD.steps.length}`,line:`${goalLine}. Acele etme. Sarı hedef sıradaki adımı gösterir. Kasaba payın ilk gün ücretsiz; düzenini kurunca bu binadan alırsın.`,cta:'Anladım'}
     ]:q?[
       {who:q.giver,icon:q.icon,kicker:q.ch,line:q.story},
-      {who:'Muhtar Hamdi',icon:'🏛️',kicker:'YOL',line:`${goalLine}. ${q.tip}`,cta:'Anladım'}
-    ]:[{who:'Muhtar Hamdi',icon:'🏛️',line:`${goalLine}. ${this.soFar()}`,cta:'Anladım'}];
+      {who:'Muhtar Hamdi',icon:'🏛️',kicker:`GÖREV ${Math.min(P.qn|0,q.n)}/${q.n}`,line:`${goalLine}. ${q.tip}`,cta:'Anladım'}
+    ]:[{who:'Muhtar Hamdi',icon:'🏛️',kicker:'SERBEST',line:`${goalLine}. ${this.soFar()}`,cta:'Anladım'}];
     const alt=(!step||step.id==='chest')?{label:'Kasaba geliri',fn:()=>{$('townhall-modal').classList.remove('h');townhallUI()}}:null;
     this.play(beats,null,{skipDone:false,alt});
   },
