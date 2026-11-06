@@ -7548,7 +7548,7 @@ function update(dt){
   updHomeAnimals(dt);
   
   for(let i=tel.length-1;i>=0;i--){
-    const t=tel[i];t.t-=dt/GAME_BALANCE.profile().windup;
+    const t=tel[i];if(!t){tel.splice(i,1);continue}t.t-=dt/GAME_BALANCE.profile().windup;
     if(t.t<=.28&&!t.ping){
       t.ping=1;
       if(!P.dead&&Math.hypot(P.x-t.x,P.y-t.y)<t.r+38&&(P.areaWarnT||0)<=0){P.areaWarnT=.55;fl(P.x,P.y-34,'❗ ALANDAN ÇIK!','#fca5a5',true);sfx(900,.08,'square',.05)}
@@ -7565,7 +7565,7 @@ function update(dt){
   }
   
   for(let i=prj.length-1;i>=0;i--){
-    const p=prj[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;
+    const p=prj[i];if(!p){prj.splice(i,1);continue}p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;
     if(p.isHero&&p.t>0&&bl(p.x,p.y,1)){p.t=0;spark(p.x,p.y,5,p.col||'#fff',40);sfx(260,.05,'square',.03)}
     if(p.t<=0){if(p.boom&&!p.did){p.did=1;COMBAT.boom(p)}prj.splice(i,1);continue}
     p.fxT=(p.fxT||0)+dt;
@@ -7610,7 +7610,7 @@ function update(dt){
   }
   
   for(let i=loot.length-1;i>=0;i--){
-    const l=loot[i];l.a+=dt;l.vy+=220*dt;
+    const l=loot[i];if(!l){loot.splice(i,1);continue}l.a+=dt;l.vy+=220*dt;
     l.z=Math.min(0,l.z+l.vy*dt);if(l.z>=0)l.vy=0;
     const d=Math.hypot(P.x-l.x,P.y-l.y);
     if(l.a>.4&&d>0&&d<55&&!P.dead){
