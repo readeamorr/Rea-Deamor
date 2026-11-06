@@ -3186,6 +3186,76 @@ const QUEST_FLOW=window.QUEST_FLOW={
     return `<div id="story-direction" class="quest-card g-card"><div class="quest-card-head g-card-head"><div class="g-goal"><span class="quest-chapter g-heading">${label} · ${q.ch}</span><h3 class="g-goal-name">${q.icon} ${q.t}</h3><span class="quest-giver">📜 Görevi veren: ${q.giver}</span></div><div class="g-headside"><span class="g-counter">${progress}<small>/ ${q.n}</small></span><span class="quest-ready ${ready?'ok':''}">${ready?'HAZIR':`HAZIRLIK ${prep.ready}/${prep.total}`}</span></div></div><p style="color:#d7c7a2;font-size:9.5px">${window.STORY?STORY.soFar():''}</p><p>${q.story}</p><div class="quest-progress"><i style="width:${pct}%"></i></div><div class="g-block g-why"><h4>Neden?</h4><p>${q.why}</p></div><div class="quest-prep">${prep.checks.map(c=>`<span class="${c.ok?'ok':''}">${c.ok?'✓':'○'} ${c.label}</span>`).join('')}</div>${missingHTML?`<div class="g-resources">${missingHTML}</div>`:''}<div class="quest-rewards"><span>+${rewardG}🪙</span><span>+${rewardM}💎</span><span>+${rewardXp} XP</span></div><div class="g-block"><h4>Ne yapmalıyım?</h4><p>${q.tip}</p></div><div class="quest-actions"><button type="button" class="primary" data-quest-map="1">🗺️ Hedefi Haritada Göster</button><button type="button" data-quest-bag="1">🧰 Hazırlık Planını Aç</button></div></div>${this.timelineHTML(q)}<p class="inventory-help">Hepsini aynı gün yapmak zorunda değilsin. Hazırlan → hedefi tamamla → ödülle dön → sonraki bölüme geç.</p>`;
   }
 };
+// ===== EPILOG: Gölgeköy'ün İlk Işığı (Bölüm 4 sonrası ek içerik) =====
+const EPILOG=window.EPILOG={
+  STEPS:[
+    {id:'well',need:4,icon:'🕳️',label:'Eski Kuyuyu Temizle',hint:'Meydandaki antik kuyunun başında duran 4 engeli kaldır'},
+    {id:'supply',need:2,icon:'🥖',label:'Fırına Erzak Sağla',hint:'Melis’in 2 buğday kontratını teslim et ya da ev ocağında 2 buğdayla ekmek pişir'},
+    {id:'lantern',need:1,icon:'🕯️',label:'Kasaba Işığını Yak',hint:'Meydan fenerlerinden birinin yanında F’ye bas'},
+    {id:'festival',need:1,icon:'🎉',label:'İlk Kasaba Şenliği',hint:'Belediye Binası’na gir ve halkı bir araya getir'}
+  ],
+  need(id){const s=this.STEPS.find(x=>x.id===id);return s?s.need:0},
+  enabled(){return !!(window.QUEST_FLOW&&QUEST_FLOW.verifiedDragon())},
+  st(){if(!P.adventure)return null;if(!P.adventure.stats||typeof P.adventure.stats!=='object')P.adventure.stats={};return P.adventure.stats},
+  n(id){const s=this.st();const v=s?(s['epi_'+id]|0):0;return Math.min(this.need(id),Math.max(0,v||0))},
+  maxed(id){return this.n(id)>=this.need(id)},
+  doneCount(){return this.STEPS.filter(s=>this.maxed(s.id)).length},
+  allDone(){return this.STEPS.every(s=>this.maxed(s.id))},
+  add(id,amt){
+    if(!this.enabled())return false;
+    const s=this.st();if(!s||s.epi_done===true)return false;
+    const key='epi_'+id,cur=s[key]|0,add=Math.max(0,amt|0||0);
+    const next=Math.min(this.need(id),Math.max(0,cur)+add);
+    if(next===cur)return false;
+    s[key]=next;
+    if(id==='well')fl(P.x,P.y-26,`🧹 Kuyyu başı: ${next}/4`,'#fde68a',true);
+    else if(id==='supply')fl(P.x,P.y-26,`🥖 Fırın için erzak: ${next}/2`,'#fde68a',true);
+    else if(id==='lantern')fl(P.x,P.y-26,'🕯️ Meydan feneri yandı','#fde68a',true);
+    playChord([523,659,784],.16,'triangle',.04);
+    const complete=this.allDone();
+    if(complete){
+      s.epi_done=true;
+      NOTIFICATIONS.push('quest','🕯️','Epilog tamamlandı','Gölgeköy’ün ışığı yeniden yanıyor.');
+      ban('🕯️ EPILOG TAMAMLANDI','#fde68a');
+      playChord([523,659,784,1046],.4,'triangle',.07);
+      setTimeout(()=>{
+        if(document.querySelector('.ov:not(.h)'))return;
+        MODAL_QUEUE.enqueue('epilog:1:'+P.day,3,'chapter-complete-modal',()=>{
+          $('chapter-complete-content').innerHTML=`<div class="chapter-recap"><span class="guide-kicker">GÖLGEKÖY’ÜN İLK IŞIĞI</span><h3>Epilog tamamlandı</h3><p>Kuyu temizlendi, fırın doldu, meydan bir kez daha yüzüne oh kaldı. Belediye kapısından çıkan ışık iki gün değil, bundan sonra her akşam yanacak.</p><p><b>Şimdi:</b> Kasabanı koru. Geri kalanı eylemin ve komşularınla yaptıkların belirler.</p></div>`;
+          $('chapter-reward-choices').innerHTML='';
+          $('chapter-complete-modal').classList.remove('h');
+          GAME_CORE.resetInput();
+        });
+      },900);
+    }
+    sv();
+    return true;
+  },
+  supply(amt){return this.add('supply',amt||2)},
+  pickWell(){return this.add('well',1)},
+  lightLantern(){return this.add('lantern',1)},
+  festival(){return this.add('festival',1)},
+  tick(){
+    if(!this.enabled())return;
+    const s=this.st();if(!s||s.epi_done===true||s.epi_intro===true)return;
+    if(P.dead||P.combatTimer>0||STORY.scene)return;
+    if(document.querySelector('.ov:not(.h)'))return;
+    s.epi_intro=true;sv();
+    STORY.play([{who:'Muhtar Hamdi',icon:'🏛️',kicker:'GÖLGELERDEN IŞIĞA',line:'Ejder düştü, ama Gölgeköy hâlâ karanlıkta. Eski kuyuyu temizleyip fırına erzak ulaştır, meydan fenerlerini yak. Sonra Belediye Binası’nda halkı bir araya getir. Bu kez kasabanın ışığı sen olacaksın.',cta:'Başlayalım'}],null,{skipDone:false});
+  },
+  html(){
+    if(!this.enabled())return '';
+    const s=this.st();
+    if(s.epi_done===true){
+      return `<div class="journey-box g-card"><div class="g-card-head"><div class="g-goal"><span class="g-heading">EPILOG · GÖLGEKÖY’ÜN İLK IŞIĞI</span><b class="g-goal-name">🕯️ Epilog tamamlandı</b></div><span class="g-counter">4<small>/ 4</small></span></div><div class="g-block g-why"><h4>Işık artık senindir</h4><p>Kuyu, fırın, fener ve belediye kapısı. Gölgeköy bu gece karanlık değildir.</p></div></div>`;
+    }
+    const steps=this.STEPS.map(step=>{
+      const n=this.n(step.id),ok=n>=step.need;
+      return `<div class="g-res"><b>${step.icon} ${step.label}</b><span>${step.hint} · <b style="color:${ok?'#86efac':'#fde68a'}">${n}/${step.need}</b></span></div>`;
+    }).join('');
+    return `<div class="journey-box g-card" id="epilog-card"><div class="g-card-head"><div class="g-goal"><span class="g-heading">EPILOG · GÖLGEKÖY’ÜN İLK IŞIĞI</span><b class="g-goal-name">🏮 Kasabanın ışığını geri getir</b></div><span class="g-counter">${this.doneCount()}<small>/ 4</small></span></div><div class="g-block"><h4>Muhtar Hamdi</h4><p>“Ejder düştü, ama Gölgeköy hâlâ karanlıkta. Bu dört işi bitir.”</p></div><div class="g-resources">${steps}</div></div>`;
+  }
+};
 function closeQuestPrep(){$('quest-prep-modal').classList.add('h');GAME_CORE.resetInput()}
 $('quest-prep-close').onclick=closeQuestPrep;
 $('quest-prep-bag').onclick=()=>{closeQuestPrep();$('journey-modal').classList.add('h');openInv()};
@@ -5367,6 +5437,7 @@ const FARM={
     if(countInv(ord.reqK)<ord.qty)return `Eksik! Çantanda ${ord.qty} adet ${ord.reqName} olmalı (Şu an: ${countInv(ord.reqK)}).`;
     if(!consumeInv(ord.reqK,ord.qty))return 'Ürün teslim edilemedi.';
     h.contractsDone.push(idx);
+    if(ord.idx===0&&ord.reqK==='wheat'&&window.EPILOG)EPILOG.supply(ord.qty);
     P.gold+=ord.gold;P.gems+=ord.gems;P.fert=(P.fert||0)+ord.fert;
     P.rep=(P.rep||0)+8;P.townWorkDay=P.day;
     const sr=ord.seedReward,sc=CROPS[sr];
@@ -9394,7 +9465,10 @@ function ui(dt){
     const dStorage=Math.hypot(P.x-14*TS,P.y-24*TS);
     $('bst').classList.toggle('h',dStorage>45);
 
-    if(ONBOARD.current()?.id==='chest'&&Math.hypot(P.x-27*TS,P.y-37*TS)<84){
+    const epiBlock=window.EPILOG&&EPILOG.enabled();
+    if(epiBlock&&!EPILOG.maxed('well')&&Math.hypot(P.x-31*TS,P.y-30*TS)<28){pText=`🧹 Eski Kuyuyu Temizle (${EPILOG.n('well')}/4)`;pFn=()=>EPILOG.pickWell()}
+    else if(epiBlock&&!EPILOG.maxed('lantern')){for(const o of objs){if(o.k==='lamp'&&Math.hypot(o.x-P.x,o.y-P.y)<26){pText='🕯️ Feneri Yak';pFn=()=>EPILOG.lightLantern();break}}}
+    else if(ONBOARD.current()?.id==='chest'&&Math.hypot(P.x-27*TS,P.y-37*TS)<84){
       pText='📦 Depo Sandığını Kur';
       pFn=()=>BUILD.start('chest');
     }else if(Math.hypot(P.x-6*TS, P.y-8*TS) < 28){
@@ -9619,7 +9693,7 @@ function ui(dt){
     }
     const event=WORLD_EVENTS.current();wEl.textContent+=` · ${event.icon}`;wEl.title=(curMap==='frontier'?frontierClimateLabel():wEl.textContent)+` · ${event.name}: ${event.desc}`;
   }
-  WAYPOINTS.tick();updateFriendTracker();FEATURES.update();QUEST_FLOW.maybeShowChapter();if(window.CHAPSCENES)CHAPSCENES.tick();DECISIONS.tick();DAY_RECAP.maybeShow();MODAL_QUEUE.pump();
+  WAYPOINTS.tick();updateFriendTracker();FEATURES.update();QUEST_FLOW.maybeShowChapter();if(window.CHAPSCENES)CHAPSCENES.tick();if(window.EPILOG)EPILOG.tick();DECISIONS.tick();DAY_RECAP.maybeShow();MODAL_QUEUE.pump();
 }
 
 /* Envanter Arayüzü */
@@ -10314,6 +10388,7 @@ function addFood(k,name,icon,hp,mp,buff,durationM,needs={}){
     desc:`+${hp} Can${mp?' · +'+mp+' Mana':''} ${buff?`· ${buff==='crit'?'+8 puan Kritik':'+%22 '+(buff==='atk'?'Saldırı':buff==='def'?'Zırh':'Hız')} (${dur}dk)`:''}`}));
   if(!tryInventoryRecipe(needs,output))return false;
   if(k==='c_bread')ONBOARD.event('cook');
+  if(k==='c_bread'&&window.EPILOG)EPILOG.supply(2);
   if(portions>1)fl(P.x,P.y-32,'🍳 2 KAT PORSİYON!','#ffd23f',true);
   addMasteryXp('cook',20);SESSION_COACH.event('farm',1);
   fl(P.x,P.y-26,'+'+icon+' '+name,'#a7f3d0',true);playChord([523,659,784],.2,'triangle',.05);
@@ -12359,6 +12434,7 @@ function mercD(m){
 
 /* Belediye Binası ve Kasaba Geliri */
 function townhallUI(){
+  if(window.EPILOG)EPILOG.festival();
   const tInfo = getRepTier(P.rep);
   const dailyGold = tInfo.tier === 4 ? 600 : tInfo.tier === 3 ? 280 : tInfo.tier === 2 ? 140 : 50;
   const dailyGems = tInfo.tier === 4 ? 10 : tInfo.tier === 3 ? 5 : tInfo.tier === 2 ? 2 : 0;
@@ -12587,7 +12663,7 @@ const ADVENTURE=window.ADVENTURE={
       const plan=FARM.carePlan(),plots=WORLD_DATA.home.farmPlots,animals=HERD.list();
       const growing=plots.filter(p=>p.crop&&!p.dead&&!FARM.ripe(p)).length;
       h=`<div class="journey-lead"><small>KOLAY ÇİFTLİK DÖNGÜSÜ</small><h2>${SEASONS[FARM.seasonIdx()].icon} ${SEASONS[FARM.seasonIdx()].n} · ${FARM.dayOf()}. Gün</h2><p>${DAY_CLOCK.detail()}</p><p>Tohum seç → günlük bakımı yap → evde uyu → hasat et. Hepsi bu.</p></div>
-      ${ONBOARD.active()?ONBOARD.html()+FEATURES.html():ONBOARD.html()+STORY.html()+QUEST_FLOW.html()+FEATURES.html()+`<div class="journey-box"><b>🎯 Bugün ve Uzun Vadeli Hedefler</b><p>Günlük odak, hikâye ilerlemesi ve büyük gelişim hedefleri artık ayrı bir ekranda.</p><button data-journey-tab="goals">Hedefler Merkezini Aç</button></div>`}
+      ${ONBOARD.active()?ONBOARD.html()+FEATURES.html():ONBOARD.html()+STORY.html()+QUEST_FLOW.html()+EPILOG.html()+FEATURES.html()+`<div class="journey-box"><b>🎯 Bugün ve Uzun Vadeli Hedefler</b><p>Günlük odak, hikâye ilerlemesi ve büyük gelişim hedefleri artık ayrı bir ekranda.</p><button data-journey-tab="goals">Hedefler Merkezini Aç</button></div>`}
       <div class="journey-stats"><div><b>${plan.ripe}</b><span>Hasada hazır</span></div><div><b>${growing}</b><span>Büyüyor</span></div><div><b>${animals.filter(a=>a.ready).length}</b><span>Hazır hayvan ürünü</span></div></div>
       <div class="journey-box"><b>🌿 Bugünün bahçe durumu</b><p>${plan.tasks?`${plan.tasks} bahçe işi hazır.`:'Bahçe bakımlı; ürünlerin büyümesi için evde uyu.'}<br>Toplam tohum: ${FARM.seedCount()} · Yem: ${P.hay||0}</p><button data-journey-action="simple-garden">Kolay Bahçeyi Aç</button></div>
       <div class="journey-box"><b>🍞 Ürünleri kullan</b><p>Hasadı yemek pişirmek, görevleri tamamlamak veya altın kazanmak için satmakta kullanabilirsin.</p></div>`;
