@@ -14026,7 +14026,7 @@ const STORY=window.STORY={
       {who:q.giver,icon:q.icon,kicker:q.ch,line:q.story},
       {who:'Muhtar Hamdi',icon:'🏛️',kicker:'YOL',line:q.tip,cta:'Anladım'}
     ]:[{who:'Muhtar Hamdi',icon:'🏛️',line:this.soFar(),cta:'Anladım'}];
-    const alt=window.ONBOARD&&ONBOARD.active&&ONBOARD.active()?{label:'Kasaba geliri',fn:()=>{$('townhall-modal').classList.remove('h');townhallUI()}}:null;
+    const alt=(!step||step.id==='chest')?{label:'Kasaba geliri',fn:()=>{$('townhall-modal').classList.remove('h');townhallUI()}}:null;
     this.play(beats,null,{skipDone:false,alt});
   },
   finale(){
